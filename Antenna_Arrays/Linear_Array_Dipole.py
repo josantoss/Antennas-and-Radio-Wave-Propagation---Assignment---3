@@ -57,6 +57,7 @@ def array_directivity(n_elements, d_lambda):
 
 # Calculate directivity for each array size and spacing
 directivity_data = {}
+peak_directivities = {}
 for n_elements in num_elements_list:
     directivity_values = []
     for d in spacings:
@@ -64,7 +65,10 @@ for n_elements in num_elements_list:
         directivity = array_directivity(n_elements, d_lambda)
         directivity_values.append(directivity)
     directivity_data[n_elements] = directivity_values
-
+    # Find peak directivity for this array size
+    valid_directivities = [d for d in directivity_values if not np.isnan(d)]
+    peak_directivities[n_elements] = max(valid_directivities) if valid_directivities else np.nan
+    
 # Plotting the directivity curves
 plt.figure(figsize=(12, 7))
 for n_elements, directivity_values in directivity_data.items():
@@ -82,3 +86,29 @@ plt.savefig('array_directivity.png')
 
 # Display plot
 plt.show(block=True)
+# This part of code generates the report of the above code.
+
+summary = f"""
+# Uniform Linear Array Directivity Analysis
+
+## Observations on Directivity
+- **Number of Elements (N)**:
+    - Directivity scales with the number of elements due to a narrower main beam.
+    - For N = 2, 4, 8, 16, peak directivities are approximately {peak_directivities[2]:.2f}, {peak_directivities[4]:.2f}, {peak_directivities[8]:.2f}, and {peak_directivities[16]:.2f}, respectively.
+    - Theoretical maximum directivity approaches 2N (e.g., {2*2:.1f}, {2*4:.1f}, {2*8:.1f}, {2*16:.1f} for N = 2, 4, 8, 16) at optimal spacing.
+- **Element Spacing (d)**:
+    - At small spacings (d < 0.5 lambda), mutual coupling reduces directivity by limiting the effective array aperture.
+    - Optimal directivity occurs around d approximately 0.5–0.8 lambda, balancing beamwidth and gain without grating lobes.
+    - For d > lambda, grating lobes emerge, distributing power to secondary lobes and reducing main lobe directivity.
+    - The grating lobe onset at d = lambda is marked on the plot, showing a drop in directivity beyond this point.
+- **Trends**:
+    - Larger arrays (e.g., N = 16) exhibit sharper directivity peaks, indicating higher sensitivity to spacing variations.
+    - Smaller arrays (e.g., N = 2) show flatter directivity curves, less affected by spacing changes.
+- **Practical Implications**:
+    - For high directivity, use d approximately 0.5–0.8 lambda with larger N, avoiding grating lobes.
+    - Spacings d > lambda are unsuitable for applications needing a single main lobe (e.g., radar, communications).
+- **Plot Details**:
+    - Directivity curves are plotted for N = 2, 4, 8, 16 over spacings from 0.1 to 2.0 lambda.
+    - Plot saved as 'array_directivity.png' and displayed.
+"""
+print(summary)
