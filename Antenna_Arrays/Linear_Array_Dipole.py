@@ -82,32 +82,3 @@ plt.savefig('array_directivity.png')
 
 # Display plot
 plt.show(block=True)
-
-# Generate Summary
-summary = """
-# Uniform Linear Array Directivity Analysis
-
-## Observations on Directivity
-- **Number of Elements (N)**:
-  - Directivity increases with the number of elements due to a narrower main beam.
-  - For N = 2, 4, 8, 16, larger N yields higher directivity, especially at optimal spacings.
-- **Element Spacing (d)**:
-  - At small spacings (d < 0.5 lambda), directivity is lower due to strong mutual coupling, which reduces the effective array aperture.
-  - Optimal directivity typically occurs around d approximately 0.5–0.8 lambda, where the main beam is narrow without significant grating lobes.
-  - For d > lambda, grating lobes appear, splitting the radiated power and reducing maximum directivity of the main lobe.
-  - The onset of grating lobes at d = lambda is marked on the plot, showing a decline in directivity for larger spacings.
-- **Trends**:
-  - Arrays with more elements (e.g., N = 16) are more sensitive to spacing changes, showing sharper peaks in directivity.
-  - Smaller arrays (e.g., N = 2) have broader directivity curves, indicating less sensitivity to spacing.
-- **Practical Implications**:
-  - For maximum directivity, choose d approximately 0.5–0.8 lambda and higher N, balancing gain with the risk of grating lobes.
-  - Avoid d > lambda in applications requiring a single main lobe (e.g., radar, communications).
-- **Plot Details**:
-  - Directivity curves are plotted for N = 2, 4, 8, 16 over spacings from 0.1 to 2.0 lambda.
-  - Plot saved as 'array_directivity.png' and displayed.
-"""
-print(summary)
-
-# Save summary to file with UTF-8 encoding
-with open('array_directivity_summary.txt', 'w', encoding='utf-8') as f:
-    f.write(summary)
