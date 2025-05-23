@@ -127,3 +127,46 @@ plt.savefig('dolph_chebyshev_array_factor.png')
 
 # Display plot
 plt.show(block=True)
+
+# The following part of code will generate a report and summary of the simulation
+summary = f"""
+# Dolph-Chebyshev Linear Array Analysis (N=10, d=0.5 lambda)
+
+## Array Factor Comparison
+- **Chebyshev Tapers (20 dB, 30 dB, 40 dB)**:
+    - Designed using Dolph-Chebyshev method to achieve specified side-lobe levels.
+    - Weights computed via Chebyshev polynomials (scipy.special.chebyt).
+- **Uniform Taper**:
+    - Equal weights for all elements, maximizing directivity but with higher side lobes.
+
+## Results
+- **Side-Lobe Levels (SLL)**:
+    - Chebyshev 20 dB: Measured SLL approximately {results['Chebyshev_20dB']['SLL_dB']:.2f} dB
+    - Chebyshev 30 dB: Measured SLL approximately {results['Chebyshev_30dB']['SLL_dB']:.2f} dB
+    - Chebyshev 40 dB: Measured SLL approximately {results['Chebyshev_40dB']['SLL_dB']:.2f} dB
+    - Uniform: Measured SLL approximately {results['Uniform']['SLL_dB']:.2f} dB
+- **Half-Power Beamwidth (HPBW)**:
+    - Chebyshev 20 dB: HPBW approximately {results['Chebyshev_20dB']['HPBW_deg']:.2f} degrees
+    - Chebyshev 30 dB: HPBW approximately {results['Chebyshev_30dB']['HPBW_deg']:.2f} degrees
+    - Chebyshev 40 dB: HPBW approximately {results['Chebyshev_40dB']['HPBW_deg']:.2f} degrees
+    - Uniform: HPBW approximately {results['Uniform']['HPBW_deg']:.2f} degrees
+
+## Observations
+- **Side-Lobe Levels**:
+    - Chebyshev tapers achieve the designed SLLs (20, 30, 40 dB), significantly lower than the uniform taper's SLL.
+    - Lower SLLs (e.g., 40 dB) require more aggressive tapering, reducing side-lobe power.
+- **Beamwidth**:
+    - Chebyshev tapers result in wider HPBW compared to uniform taper due to the trade-off for lower SLLs.
+    -  Uniform taper has the narrowest HPBW, maximizing directivity but at the cost of higher side lobes.
+- **Trade-Offs**:
+    - Chebyshev arrays are ideal for applications requiring low interference (e.g., radar, communications).
+    - Uniform arrays are better for maximum gain but suffer from higher side lobes.
+- **Plot Details**:
+    - Array factors plotted for Chebyshev (20, 30, 40 dB) and uniform tapers.
+    - Plot saved as 'dolph_chebyshev_array_factor.png' and displayed.
+"""
+print(summary)
+
+# Save summary to file with UTF-8 encoding
+with open('dolph_chebyshev_summary.txt', 'w', encoding='utf-8') as f:
+    f.write(summary)
