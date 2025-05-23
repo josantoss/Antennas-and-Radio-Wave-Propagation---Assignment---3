@@ -198,7 +198,7 @@ if __name__ == "__main__":
     hpbw, f_b_ratio, sll_dB = compute_metrics(AF, theta)
 
     # Print results
-    print("\nComputed Performance Metrics:")
+    print("\nComputed Peorformance Metrics:")
     print(f"Peak Gain: {gain_dBi:.2f} dBi")
     print(f" Half-Power Beamwidth (HPBW): {hpbw:.2f} degrees")
     print(f" Front-to-Back Ratio: {f_b_ratio:.2f} dB")
@@ -210,12 +210,11 @@ if __name__ == "__main__":
 
     # Plot VSWR
     plot_vswr()
-
-    # One-paragraph summary
+    # One-paragraph summary of the code 
     print("Summary:\n"
-          "----------\n"
-          "The Yagi–Uda antenna achieves ~11 dBi gain with a strong directional beam.\n"
-          "Directors focus energy forward; reflector suppresses backward radiation.\n"
-          "HPBW is ~45°, front-to-back ratio ~18 dB, side-lobe level ~-12 dB.\n"
-          "VSWR remains below 2 from ~880 MHz to 920 MHz, indicating good matching bandwidth.\n"
-          "These results validate its use in directional communication applications.")
+            "----------\n"
+            "The Yagi–Uda antenna achieves ~11 dBi gain with a strong directional beam.\n"
+            "Directors focus energy forward; reflector suppresses backward radiation.\n"
+            "HPBW is ~45°, front-to-back ratio ~18 dB, side-lobe level ~-12 dB.\n"
+            "VSWR remains below 2 from ~880 MHz to 920 MHz, indicating good matching bandwidth.\n"
+            "These results validate its use in directional communication applications.")
