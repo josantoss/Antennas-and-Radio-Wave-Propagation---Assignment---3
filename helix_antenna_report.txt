@@ -1,0 +1,28 @@
+
+# Helix Antenna Design Report @ 600 MHz
+
+## Axial Mode Helix
+- **Radius**: 0.0597 m
+- **Pitch**: 0.1250 m
+- **Number of Turns**: 10
+- **Length**: 1.2500 m
+- **Circumference/Wavelength (C/lambda)**: 0.7500
+- **Axial Ratio**: 1.05 (Circular Polarization)
+- **Bandwidth**: ±300.00 MHz
+- **Radiation Pattern**: Directive along helix axis (Z-axis)
+
+## Normal Mode Helix
+- **Radius**: 0.0050 m
+- **Pitch**: 0.0250 m
+- **Number of Turns**: 3
+- **Length**: 0.0750 m
+- **Circumference/Wavelength (C/lambda)**: 0.0628
+- **Axial Ratio**: inf (Linear Polarization)
+- **Bandwidth**: ±60.00 MHz
+- **Radiation Pattern**: Omnidirectional in XY-plane, dipole-like
+
+## Notes
+- Axial mode provides circular polarization with high gain, suitable for satellite communication.
+- Normal mode is linearly polarized, compact, and suitable for short-range applications.
+- Radiation patterns are analytical approximations; for precise results, use NEC simulation.
+- Plot saved as 'helix_antenna_design.png' and displayed.
