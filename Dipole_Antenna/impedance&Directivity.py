@@ -1,69 +1,44 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import sici        # Sine and cosine integrals
-from scipy.integrate import quad      # For numerical integration
+from scipy.special import sici  # Sine and cosine integrals
 
 # Constants
-C = 0.5772156649                  # Euler-Mascheroni constant
-SPEED_OF_LIGHT = 3e8              # Speed of light (m/s)
-FREQUENCY = 300e6                 # Frequency in Hz (arbitrary reference)
-WAVELENGTH = SPEED_OF_LIGHT / FREQUENCY  # Wavelength (λ)
-FREE_SPACE_IMPEDANCE = 120 * np.pi     # Characteristic impedance of free space
-WAVENUMBER = 2 * np.pi / WAVELENGTH    # k = 2π/λ
-WIRE_RADIUS = 0.001 * WAVELENGTH       # Thin wire approximation
+C = 0.5772156649  # Euler-Mascheroni constant
+WIRE_RADIUS = 1e-5  # Wire radius in wavelengths
 
 # Define dipole lengths from 0.1λ to 2.5λ
-LENGTH_OVER_WAVELENGTH = np.arange(0.1, 2.51, 0.05)
-DIPOLE_LENGTH = LENGTH_OVER_WAVELENGTH * WAVELENGTH
+LENGTH_OVER_WAVELENGTH = np.linspace(0.1, 2.5, 1000)
 
-def calculate_impedance(dipole_length, wavenumber, wire_radius, free_space_impedance, euler_constant):
+def calculate_impedance(L_over_lam, a_over_lam):
     """
-    Calculates the input impedance (R + jX) of a thin-wire dipole using analytical formulas.
-    Based on electromagnetic theory involving sine and cosine integrals.
-    
-    Parameters:
-    - dipole_length: Physical length of the dipole
-    - wavenumber: k = 2π/λ
-    - wire_radius: Radius of dipole conductor
-    - free_space_impedance: Z0 = 120π Ω
-    - euler_constant: Euler–Mascheroni constant (~0.5772)
-
-    Returns:
-    - resistance: Real part of impedance (Ω)
-    - reactance: Imaginary part of impedance (Ω)
+    Calculates the input impedance (Rr, Rin, Xin) of a thin-wire dipole.
+    Matches the formulas from the first code.
     """
-    kL = wavenumber * dipole_length
+    kL = 2 * np.pi * L_over_lam
     si_kL, ci_kL = sici(kL)
     si_2kL, ci_2kL = sici(2 * kL)
-    si_2ka2_L, ci_2ka2_L = sici(2 * wavenumber * wire_radius**2 / dipole_length)
+    si_4kL, ci_4kL = sici(4 * kL)
+    ci_2ka2_L = sici(2 * kL * (a_over_lam / L_over_lam)**2)[1]  # Only need Ci
 
-    # Resistance formula derived from EM theory
-    resistance = (free_space_impedance / (2 * np.pi)) * (
-        euler_constant + np.log(kL) - ci_kL +
-        0.5 * np.sin(kL) * (si_2kL - 2 * si_kL) +
-        0.5 * np.cos(kL) * (euler_constant + np.log(kL / 2) + ci_2kL - 2 * ci_kL)
-    )
+    # Radiation resistance (Rr)
+    term1 = C + np.log(kL) - ci_kL
+    term2 = 0.5 * np.sin(kL) * (si_2kL - 2 * si_kL)
+    term3 = 0.5 * np.cos(kL) * (C + np.log(kL / 2) + ci_2kL - 2 * ci_kL)
+    Rr = 60 * (term1 + term2 + term3)
+    # Input resistance (Rin)
+    Rin = Rr / (np.sin(kL / 2)**2) if np.sin(kL / 2) != 0 else Rr
+    # Reactance (Xin)
+    term_x1 = 2 * si_kL
+    term_x2 = np.cos(kL) * (2 * si_kL - si_2kL)
+    term_x3 = np.sin(kL) * (2 * ci_kL - ci_2kL - ci_2ka2_L)
+    Xin = 30 * (term_x1 + term_x2 - term_x3)
 
-    # Reactance formula derived from EM theory
-    reactance = (free_space_impedance / (4 * np.pi)) * (
-        2 * si_kL +
-        np.cos(kL) * (2 * si_kL - si_2kL) -
-        np.sin(kL) * (2 * ci_kL - ci_2kL - ci_2ka2_L)
-    )
-
-    return resistance, reactance
-
+    return Rr, Rin, Xin
 
 def antenna_pattern(theta, kL):
     """
     Computes normalized radiation intensity of a dipole at angle theta.
-    
-    Parameters:
-    - theta: Observation angle (radians)
-    - kL: Product of wavenumber and dipole length
-    
-    Returns:
-    - Pattern intensity proportional to power density
+    Matches the first code's pattern function.
     """
     sin_theta = np.sin(theta)
     if np.isscalar(theta):
@@ -73,71 +48,43 @@ def antenna_pattern(theta, kL):
     else:
         near_zero_mask = np.abs(sin_theta) < 1e-10
         pattern = np.zeros_like(theta, dtype=float)
-        kL_broadcast = np.broadcast_to(kL, theta.shape)
-        pattern[~near_zero_mask] = ((np.cos(kL_broadcast[~near_zero_mask] / 2 * np.cos(theta[~near_zero_mask])) - np.cos(kL_broadcast[~near_zero_mask] / 2)) / sin_theta[~near_zero_mask]) ** 2
+        pattern[~near_zero_mask] = ((np.cos(kL / 2 * np.cos(theta[~near_zero_mask])) - np.cos(kL / 2)) / sin_theta[~near_zero_mask]) ** 2
         return pattern
 
-
-def calculate_directivity(dipole_length, wavenumber):
+def calculate_directivity(L_over_lam, Rr):
     """
-    Calculates maximum directivity of a dipole by numerically integrating its radiation pattern.
-    
-    Parameters:
-    - dipole_length: Physical length of the dipole
-    - wavenumber: k = 2π/λ
-
-    Returns:
-    - directivity: Max directivity value
+    Calculates maximum directivity using the simplified formula from the first code.
     """
-    directivity = np.zeros_like(dipole_length)
-    theta_vals = np.linspace(0, np.pi, 1000)
-
-    for i, length in enumerate(dipole_length):
-        kL = wavenumber * length
-        intensity = antenna_pattern(theta_vals, kL)
-        max_intensity = np.max(intensity)
-        integral, _ = quad(lambda theta: antenna_pattern(theta, kL) * np.sin(theta), 0, np.pi, epsabs=1e-8)
-        directivity[i] = 2 * max_intensity / integral if integral > 0 else 1.5
-
-    return directivity
-
+    Q = Rr / 60 if Rr != 0 else 1
+    kL = 2 * np.pi * L_over_lam
+    theta_vals = np.linspace(0.001, np.pi, 100)
+    F = antenna_pattern(theta_vals, kL).max()
+    return 2 * F / Q if Q != 0 else 0
 
 if __name__ == "__main__":
-    # Compute impedance and directivity values
-    resistance, reactance = calculate_impedance(DIPOLE_LENGTH, WAVENUMBER, WIRE_RADIUS, FREE_SPACE_IMPEDANCE, C)
-    directivity_max = calculate_directivity(DIPOLE_LENGTH, WAVENUMBER)
+    # Compute impedance and directivity
+    Rr, Rin, Xin, D = [], [], [], []
+    for l in LENGTH_OVER_WAVELENGTH:
+        Rr_val, Rin_val, Xin_val = calculate_impedance(l, WIRE_RADIUS)
+        Rr.append(Rr_val)
+        Rin.append(Rin_val)
+        Xin.append(Xin_val)
+        D.append(calculate_directivity(l, Rr_val))
 
-    # Detect resonant lengths (where reactance ~ 0)
-    resonance_threshold = 10  # Ohms
-    resonant_indices = np.where(np.abs(reactance) < resonance_threshold)[0]
-    resonant_lengths = LENGTH_OVER_WAVELENGTH[resonant_indices]
-
-    print("Resonant Lengths (where X_in = 0):")
-    for l in resonant_lengths:
-        print(f"  - {l:.2f} λ")
-
-    # Create subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-
-    # Plot input impedance (Resistance and Reactance)
-    ax1.plot(LENGTH_OVER_WAVELENGTH, resistance, label='Resistance $R_{in}$ (Ω)', color='blue', linewidth=2)
-    ax1.plot(LENGTH_OVER_WAVELENGTH, reactance, label='Reactance $X_{in}$ (Ω)', color='red', linestyle='--', linewidth=2)
-    ax1.scatter(resonant_lengths, resistance[resonant_indices],
-                color='green', s=100, zorder=5, edgecolor='black',
-                label=r'Resonant Points ($X_{in} \approx 0$)')
-    ax1.set_xlabel('Length $L/\\lambda$')
-    ax1.set_ylabel('Impedance (Ω)')
-    ax1.set_title('Dipole Input Impedance vs. Length')
+    # Plot
+    fig, ax1 = plt.subplots()
+    fig.set_size_inches(10, 6)
+    ax1.set_ylim(-1000, 1000)
+    ax1.plot(LENGTH_OVER_WAVELENGTH, Rin, label='Input Resistance (R)')
+    ax1.plot(LENGTH_OVER_WAVELENGTH, Xin, label='Input Reactance (Xin)')
+    ax1.plot(LENGTH_OVER_WAVELENGTH, Rr, label='Radiation Resistance(r)')
+    ax1.set_xlabel('Dipole Length')
+    ax1.set_ylabel('Impedance')
+    ax1.set_title('Input Impedance & Maximum Directivity vs Dipole Length')
     ax1.legend()
-    ax1.grid(True)
-
-    # Plot maximum directivity in dB
-    ax2.plot(LENGTH_OVER_WAVELENGTH, 10 * np.log10(directivity_max), label='Directivity (dB)', color='green')
-    ax2.set_xlabel('Length $L/\\lambda$')
-    ax2.set_ylabel('Directivity (dB)')
-    ax2.set_title('Dipole Maximum Directivity vs. Length')
+    ax1.grid()
+    ax2 = ax1.twinx()
+    ax2.plot(LENGTH_OVER_WAVELENGTH, D, "r", label='Maximum Directivity')
+    ax2.set_ylabel('Directivity')
     ax2.legend()
-    ax2.grid(True)
-
-    plt.tight_layout()
     plt.show()
