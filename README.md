@@ -1,0 +1,1 @@
+This repository contains the Python-based implementation and documentation for the group assignment in the Antenna and Radiowave Propagation - ECEG 4304 course at Addis Ababa Institute of Technology (AAIT). The project focuses on a Python-Based Antenna analysis and design for wire Antennas and Antenna Arrays by using python libraries such as NumPy, SciPy, and Matplotlib.
